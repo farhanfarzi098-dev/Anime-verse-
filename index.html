@@ -1,1 +1,162 @@
 # Anime-verse-
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090611">
+  <title>AnimeVerse | Anime Hub</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: #090611; color: #f8f4ff;
+      font-family: system-ui, sans-serif;
+    }
+    header {
+      padding: 18px; display: flex; align-items: center;
+      justify-content: space-between; gap: 12px;
+      border-bottom: 1px solid #302044;
+    }
+    .logo { font-size: 23px; font-weight: 900; color: #c4a2ff; }
+    button, .upload-label {
+      background: #8b5cf6; color: white; border: 0;
+      padding: 11px 15px; border-radius: 10px;
+      font-weight: 700; cursor: pointer;
+    }
+    main { max-width: 950px; margin: auto; padding: 18px; }
+    .hero {
+      padding: 30px 22px; border-radius: 18px;
+      background: linear-gradient(135deg,#291348,#11101f 75%);
+      border: 1px solid #57318b; margin: 10px 0 28px;
+    }
+    h1 { font-size: clamp(32px, 8vw, 55px); margin: 12px 0; }
+    p { color: #c9bddc; line-height: 1.6; }
+    input[type="search"] {
+      width: 100%; padding: 14px; border-radius: 10px;
+      border: 1px solid #49365f; background: #130d20;
+      color: white; font-size: 16px; margin-bottom: 18px;
+    }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; }
+    .upload-label { display: inline-block; }
+    #videoInput { display: none; }
+    #status { font-size: 13px; }
+    .grid {
+      display: grid; grid-template-columns: repeat(auto-fit,minmax(145px,1fr));
+      gap: 14px;
+    }
+    .card {
+      background: #171020; border: 1px solid #342342;
+      border-radius: 14px; padding: 12px; min-width: 0;
+    }
+    .poster {
+      aspect-ratio: 4 / 3; display: grid; place-items: center;
+      border-radius: 9px; background: linear-gradient(135deg,#54237c,#151020);
+      font-size: 36px; overflow: hidden;
+    }
+    .poster img { width: 100%; height: 100%; object-fit: cover; }
+    .card h3 { font-size: 16px; overflow-wrap: anywhere; }
+    video { width: 100%; border-radius: 9px; background: #000; }
+    .small { font-size: 12px; color: #bcaad4; }
+    footer { text-align: center; padding: 30px 12px; color: #9c8cab; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">✦ AnimeVerse</div>
+    <span class="small">YOUR ANIME HUB</span>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="small">WELCOME TO YOUR UNIVERSE</div>
+      <h1>Enter Another World.</h1>
+      <p>Discover anime, organize your episodes and build your collection.</p>
+      <button onclick="document.querySelector('#library').scrollIntoView({behavior:'smooth'})">
+        Explore Library ↓
+      </button>
+    </section>
+
+    <h2>Anime Library</h2>
+    <p>Choose video files stored on your phone to preview them here.</p>
+
+    <div class="toolbar">
+      <label class="upload-label" for="videoInput">＋ Select Videos</label>
+      <input id="videoInput" type="file" accept="video/*" multiple>
+      <button id="clearButton" type="button">Clear Library</button>
+    </div>
+    <p id="status" role="status">No videos selected yet.</p>
+    <input id="search" type="search" placeholder="Search anime or episode...">
+
+    <section id="library" class="grid" aria-live="polite"></section>
+  </main>
+
+  <footer>AnimeVerse © <span id="year"></span> · Built for anime fans</footer>
+
+  <script>
+    const picker = document.getElementById('videoInput');
+    const library = document.getElementById('library');
+    const status = document.getElementById('status');
+    const search = document.getElementById('search');
+    const items = [];
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    function render() {
+      library.replaceChildren();
+      const query = search.value.toLowerCase();
+      const visible = items.filter(item => item.name.toLowerCase().includes(query));
+
+      visible.forEach(item => {
+        const card = document.createElement('article');
+        card.className = 'card';
+
+        const poster = document.createElement('div');
+        poster.className = 'poster';
+        poster.textContent = '▶';
+
+        const title = document.createElement('h3');
+        title.textContent = item.name;
+
+        const video = document.createElement('video');
+        video.controls = true;
+        video.preload = 'metadata';
+        video.src = item.url;
+
+        const note = document.createElement('p');
+        note.className = 'small';
+        note.textContent = 'Local preview · not uploaded online';
+
+        card.append(poster, title, video, note);
+        library.append(card);
+      });
+
+      if (visible.length === 0) {
+        const empty = document.createElement('p');
+        empty.textContent = items.length ? 'No matching videos.' : 'Your anime collection will appear here.';
+        library.append(empty);
+      }
+    }
+
+    picker.addEventListener('change', () => {
+      for (const file of picker.files) {
+        if (!file.type.startsWith('video/')) continue;
+        items.push({ name: file.name, url: URL.createObjectURL(file) });
+      }
+      status.textContent = items.length + ' video(s) selected in this session.';
+      picker.value = '';
+      render();
+    });
+
+    search.addEventListener('input', render);
+
+    document.getElementById('clearButton').addEventListener('click', () => {
+      items.forEach(item => URL.revokeObjectURL(item.url));
+      items.length = 0;
+      status.textContent = 'Library cleared.';
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
